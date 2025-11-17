@@ -1,0 +1,57 @@
+# ============================================
+# 📦 DEPENDÊNCIAS & AMBIENTES
+# ============================================
+__pycache__/
+*.py[cod]
+*.pyd
+*.pyo
+*.so
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Poetry configs (exceto pyproject)
+poetry.lock
+.poetry/
+
+
+# ============================================
+# 🧰 EDITORES & SISTEMA
+# ============================================
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+
+# ============================================
+# 📁 ARQUIVOS NÃO NECESSÁRIOS NO BUILD
+# ============================================
+tests/
+docs/
+media/
+staticfiles/
+static/
+node_modules/
+
+# Git
+.git/
+.gitignore
+
+
+# ============================================
+# 🔐 ARQUIVOS SENSÍVEIS
+# ============================================
+.env
+.env.*
+secrets.json
+
+
+# ============================================
+# 🛠 OUTROS
+# ============================================
+docker-compose.yml

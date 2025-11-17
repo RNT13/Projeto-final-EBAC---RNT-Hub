@@ -1,0 +1,94 @@
+# ============================================
+# 🐍 PYTHON
+# ============================================
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+env/
+venv/
+
+# Poetry
+.poetry/
+poetry.lock
+
+# Byte-compiled / optimized / DLL files
+*.pyd
+*.pyo
+*.so
+
+# Distribution / packaging
+build/
+develop-eggs/
+dist/
+eggs/
+.eggs/
+parts/
+*.egg-info/
+.installed.cfg
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+
+# ============================================
+# 🧪 TESTS
+# ============================================
+.coverage
+htmlcov/
+coverage.xml
+.pytest_cache/
+
+
+# ============================================
+# 📦 DJANGO / DRF
+# ============================================
+# Django cache
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Media / static (geradas automaticamente)
+media/
+staticfiles/
+static/
+
+# Gunicorn / Uvicorn logs
+gunicorn*
+uvicorn*
+
+
+# ============================================
+# 🧰 EDITOR & SO
+# ============================================
+# VSCode
+.vscode/
+.code-workspace
+
+# MacOS
+.DS_Store
+
+# Windows
+Thumbs.db
+
+
+# ============================================
+# 🔐 SECURITY (SUPER IMPORTANTE)
+# ============================================
+.env
+.env.*
+!.env.example
+
+# Prevent secrets
+secrets.json
+
+
+# ============================================
+# 🐳 DOCKER
+# ============================================
+# Somente arquivos gerados
+docker-data/
