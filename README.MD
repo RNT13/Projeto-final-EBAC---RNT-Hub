@@ -361,7 +361,7 @@ urlpatterns = [
     path("", api_root),
     path("admin/", admin.site.urls),
     path("api-token-auth/", obtain_auth_token, name="api_token_auth"),
-    path("api/", include(router.urls)),
+    path("api/v1/", include(router.urls)),
 ]
 
 ```
@@ -659,7 +659,7 @@ volumes:
 ```yaml
 services:
   - type: web
-    name: backend-django
+    name: Nome_do_projeto_aqui
     env: docker
     dockerfilePath: ./Dockerfile
     plan: free
@@ -669,7 +669,7 @@ services:
       - key: DEBUG
         value: "0"
       - key: DJANGO_ALLOWED_HOSTS
-        value: backend-django.onrender.com
+        value: Nome_do_projeto_aqui.onrender.com
 databases:
   - name: db
     plan: free
