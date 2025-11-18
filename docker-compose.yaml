@@ -12,7 +12,6 @@ services:
 
   web:
     build: .
-    command: python manage.py runserver 0.0.0.0:8000
     volumes:
       - .:/app
     ports:
@@ -21,6 +20,9 @@ services:
       - .env
     depends_on:
       - db
+    environment:
+      POETRY_VIRTUALENVS_IN_PROJECT: "false"
+      POETRY_VIRTUALENVS_PATH: "/opt/venvs"
 
 volumes:
   postgres_data:

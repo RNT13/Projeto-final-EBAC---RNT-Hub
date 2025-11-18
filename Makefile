@@ -1,5 +1,6 @@
 SERVICE_NAME = web
-PYTHON_EXEC = docker-compose exec $(SERVICE_NAME) poetry run python
+# Use "docker-compose run --rm" para garantir que a virtualenv seja criada corretamente dentro do container
+PYTHON_EXEC = docker-compose exec $(SERVICE_NAME) python
 
 .PHONY: help
 help:
@@ -31,16 +32,16 @@ collectstatic: ## 📦 Collect static files
 
 # Tests & QA
 test: ## 🧪 Run tests (pytest)
-	docker-compose exec $(SERVICE_NAME) poetry run pytest
+	$(PYTHON_EXEC) -m pytest
 
 format: ## 🎨 Format code (black + isort)
-	docker-compose exec $(SERVICE_NAME) poetry run black .
-	docker-compose exec $(SERVICE_NAME) poetry run isort .
+	$(PYTHON_EXEC) -m black .
+	$(PYTHON_EXEC) -m isort .
 
 lint: ## 🧐 Lint (flake8 + checks)
-	docker-compose exec $(SERVICE_NAME) poetry run flake8 .
-	docker-compose exec $(SERVICE_NAME) poetry run black --check .
-	docker-compose exec $(SERVICE_NAME) poetry run isort --check .
+	$(PYTHON_EXEC) -m flake8 .
+	$(PYTHON_EXEC) -m black --check .
+	$(PYTHON_EXEC) -m isort --check .
 
 reset: ## 🔥 Reset docker environment (use carefully)
 	docker-compose down -v

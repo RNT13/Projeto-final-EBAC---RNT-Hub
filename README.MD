@@ -115,10 +115,10 @@ SECRET_KEY=coloque_uma_chave_muito_grande_e_aleatoria_aqui
 DEBUG=0
 
 # Lista de domínios permitidos
-DJANGO_ALLOWED_HOSTS=127.0.0.1 localhost 127.0.0.1:8000 url_do_render_aqui
+DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1
 
-# Caso use CSRF Trusted Origins (ex: Render)
-DJANGO_CSRF_TRUSTED_ORIGINS=https://url_do_render_aqui
+# CSRF previne ataques que usam a sessão do usuário sem permissão.
+DJANGO_CSRF_TRUSTED_ORIGINS=http://localhost:8000,https://127.0.0.1:8000
 
 
 # ================================
@@ -154,14 +154,6 @@ EMAIL_HOST_PASSWORD=sua_senha_app
 # 🔥 LOG LEVEL (produção)
 # ================================
 DJANGO_LOG_LEVEL=INFO
-
-
-# ================================
-# 🧹 SECURITY HEADERS
-# ================================
-SECURE_SSL_REDIRECT=True
-SESSION_COOKIE_SECURE=True
-CSRF_COOKIE_SECURE=True
 
 DRF_RENDERER_DEFAULT=JSON
 ```
@@ -224,6 +216,9 @@ DEBUG = os.getenv("DEBUG", "1") == "1"
 
 ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS",
                           "127.0.0.1 localhost").split()
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip() for origin in os.getenv("DJANGO_CSRF_TRUSTED_ORIGINS", "").split(",") if origin
+]
 
 # Apps
 INSTALLED_APPS = [
@@ -323,6 +318,11 @@ REST_FRAMEWORK = {
         "rest_framework.permissions.IsAuthenticated",
     ],
 }
+
+# Segurança
+SECURE_SSL_REDIRECT = not DEBUG
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
 
 
 ```
@@ -554,7 +554,8 @@ pythonpath = "."
 
 ```makefile
 SERVICE_NAME = web
-PYTHON_EXEC = docker-compose exec $(SERVICE_NAME) poetry run python
+# Use "docker-compose run --rm" para garantir que a virtualenv seja criada corretamente dentro do container
+PYTHON_EXEC = docker-compose exec $(SERVICE_NAME) python
 
 .PHONY: help
 help:
@@ -586,20 +587,21 @@ collectstatic: ## 📦 Collect static files
 
 # Tests & QA
 test: ## 🧪 Run tests (pytest)
-	docker-compose exec $(SERVICE_NAME) poetry run pytest
+	$(PYTHON_EXEC) -m pytest
 
 format: ## 🎨 Format code (black + isort)
-	docker-compose exec $(SERVICE_NAME) poetry run black .
-	docker-compose exec $(SERVICE_NAME) poetry run isort .
+	$(PYTHON_EXEC) -m black .
+	$(PYTHON_EXEC) -m isort .
 
 lint: ## 🧐 Lint (flake8 + checks)
-	docker-compose exec $(SERVICE_NAME) poetry run flake8 .
-	docker-compose exec $(SERVICE_NAME) poetry run black --check .
-	docker-compose exec $(SERVICE_NAME) poetry run isort --check .
+	$(PYTHON_EXEC) -m flake8 .
+	$(PYTHON_EXEC) -m black --check .
+	$(PYTHON_EXEC) -m isort --check .
 
 reset: ## 🔥 Reset docker environment (use carefully)
 	docker-compose down -v
 	docker system prune -a --volumes -f
+
 ```
 
 ---
@@ -615,21 +617,36 @@ ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y build-essential libpq-dev --no-install-recommends && rm -rf /var/lib/apt/lists/*
+# Dependências do sistema
+RUN apt-get update && \
+    apt-get install -y build-essential libpq-dev curl --no-install-recommends && \
+    rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Instala Poetry
+RUN curl -sSL https://install.python-poetry.org | python3 -
+ENV PATH="/root/.local/bin:$PATH"
 
-COPY . .
+# Copia apenas pyproject e poetry.lock para cache
+COPY pyproject.toml poetry.lock* /app/
+
+# Configura Poetry para não criar virtualenvs e instala dependências no container
+RUN poetry config virtualenvs.create false \
+    && poetry install --no-root --no-interaction --no-ansi
+
+# Copia o restante do projeto
+COPY . /app
 
 ENV DJANGO_SETTINGS_MODULE=core.settings
 ENV PORT=8000
 
+# Coleta arquivos estáticos
 RUN python manage.py collectstatic --noinput
 
 EXPOSE 8000
 
-CMD ["bash", "-c", "python manage.py migrate --noinput && gunicorn core.wsgi:application --bind 0.0.0.0:8000 --workers 3"]
+# Comando padrão
+CMD ["bash", "-c", "python manage.py migrate --noinput && gunicorn core.wsgi:application --bind 0.0.0.0:8000 --workers 3 --timeout 120"]
+
 ```
 
 2. docker-compose.yml (dev)
@@ -649,15 +666,17 @@ services:
 
   web:
     build: .
-    command: python manage.py runserver 0.0.0.0:8000
     volumes:
       - .:/app
     ports:
       - "8000:8000"
     env_file:
-      - .env.dev
+      - .env
     depends_on:
       - db
+    environment:
+      POETRY_VIRTUALENVS_IN_PROJECT: "false"
+      POETRY_VIRTUALENVS_PATH: "/opt/venvs"
 
 volumes:
   postgres_data:
@@ -1046,9 +1065,9 @@ git push -u origin main
 
 ## 🟪 Exportar requirements
 
-| Comando                                                       | Descrição              |
-| ------------------------------------------------------------- | ---------------------- |
-| `poetry export -f requirements.txt --output requirements.txt` | gerar requirements.txt |
+| Comando                                                                        | Descrição              |
+| ------------------------------------------------------------------------------ | ---------------------- |
+| `poetry export -f requirements.txt --output requirements.txt --without-hashes` | gerar requirements.txt |
 
 ---
 
@@ -1126,27 +1145,24 @@ git push -u origin main
 
 ---
 
-# 🌐 8. Render — Deploy
+# ⚙️ 9. Makefile base do Projeto
 
-Render não usa CLI, mas aqui vão comandos úteis:
-
-| Comando                                             | Descrição       |
-| --------------------------------------------------- | --------------- |
-| `render logs <serviço>`                             | visualizar logs |
-| `curl https://SEU_BACKEND.onrender.com/api/health/` | healthcheck     |
+| Comando                | Descrição                                                                                                                      |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `make help`            | Mostra todos os comandos disponíveis no Makefile                                                                               |
+| `make up`              | Builda e sobe os containers Docker em background (`docker-compose up -d --build`)                                              |
+| `make down`            | Para e remove os containers Docker (`docker-compose down`)                                                                     |
+| `make logs`            | Mostra os logs em tempo real dos containers (`docker-compose logs -f`)                                                         |
+| `make shell`           | Abre um shell no container `web` (`docker-compose exec web /bin/sh`)                                                           |
+| `make migrate`         | Cria migrações e aplica no banco de dados (`poetry run python manage.py makemigrations` e `migrate`)                           |
+| `make createsuperuser` | Cria um superuser interativo no Django (`poetry run python manage.py createsuperuser`)                                         |
+| `make collectstatic`   | Coleta arquivos estáticos (`poetry run python manage.py collectstatic --noinput`)                                              |
+| `make test`            | Roda os testes usando pytest (`docker-compose exec web poetry run pytest`)                                                     |
+| `make format`          | Formata o código com Black e organiza imports com Isort (`docker-compose exec web poetry run black .` e `isort .`)             |
+| `make lint`            | Checa o código com Flake8, Black e Isort (`docker-compose exec web poetry run flake8 .`, `black --check .`, `isort --check .`) |
+| `make reset`           | Reseta todo o ambiente Docker (remove containers, volumes, imagens e cache)                                                    |
 
 ---
-
-# ⚙️ 9. Makefile (opcional)
-
-Se quiser, posso gerar um Makefile automático com comandos:
-
-- `make run`
-- `make format`
-- `make lint`
-- `make build`
-- `make docker`
-- `make deploy`
 
 # 👤 Autor
 
