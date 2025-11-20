@@ -4,9 +4,6 @@ from rest_framework import serializers
 User = get_user_model()
 
 
-# -------------------------------------------------------------------
-#   1. Serializer para criação/registro
-# -------------------------------------------------------------------
 class UserRegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(
         write_only=True,
@@ -15,21 +12,15 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         help_text="Senha precisa ter no mínimo 6 caracteres.",
     )
 
-    confirm_password = serializers.CharField(write_only=True)
+    confirm_password = serializers.CharField(write_only=True, style={"input_type": "password"})
 
     class Meta:
         model = User
-        fields = ["id", "email", "username", "password"]
-        extra_kwargs = {
-            "password": {"write_only": True},
-        }
+        fields = ["id", "email", "username", "password", "confirm_password"]
 
     def validate(self, attrs):
-        confirm_password = self.initial_data.get("confirm_password")
-
-        if attrs["password"] != confirm_password:
+        if attrs["password"] != attrs["confirm_password"]:
             raise serializers.ValidationError({"confirm_password": "As senhas não coincidem."})
-
         return attrs
 
     def validate_email(self, value):
@@ -38,6 +29,8 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         return value
 
     def create(self, validated_data):
+        validated_data.pop("confirm_password")
+
         password = validated_data.pop("password")
         user = User(**validated_data)
         user.set_password(password)
@@ -48,6 +41,8 @@ class UserRegisterSerializer(serializers.ModelSerializer):
 # -------------------------------------------------------------------
 #   2. Serializer de perfil (visualização e edição)
 # -------------------------------------------------------------------
+
+
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
