@@ -15,29 +15,31 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         help_text="Senha precisa ter no mínimo 6 caracteres.",
     )
 
+    confirm_password = serializers.CharField(write_only=True)
+
     class Meta:
         model = User
-        fields = ["id", "email", "username", "password", "confirmPassword"]
+        fields = ["id", "email", "username", "password"]
+        extra_kwargs = {
+            "password": {"write_only": True},
+        }
 
     def validate(self, attrs):
-        # Verifica senha === confirmPassword
-        if attrs["password"] != attrs["confirmPassword"]:
-            raise serializers.ValidationError({"confirmPassword": "As senhas não coincidem."})
+        confirm_password = self.initial_data.get("confirm_password")
+
+        if attrs["password"] != confirm_password:
+            raise serializers.ValidationError({
+                "confirm_password": "As senhas não coincidem."
+            })
 
         return attrs
 
     def validate_email(self, value):
-        """
-        Garante que não exista usuário com o mesmo email.
-        """
         if User.objects.filter(email=value).exists():
             raise serializers.ValidationError("Este e-mail já está em uso.")
         return value
 
     def create(self, validated_data):
-        """
-        Criação segura do usuário com set_password.
-        """
         password = validated_data.pop("password")
         user = User(**validated_data)
         user.set_password(password)

@@ -8,7 +8,7 @@ from .serializers import UserRegisterSerializer, UserSerializer
 #   1. Registro de usuário (somente CREATE)
 # -------------------------------------------------------------------
 class UserRegisterViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
-    queryset = User.objects.all()
+    queryset = User.objects.none()
     serializer_class = UserRegisterSerializer
     permission_classes = [permissions.AllowAny]
 
