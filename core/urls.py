@@ -36,6 +36,8 @@ def api_root(request):
                 "token": "/api/token/",
                 "books": "/api/v1/books/",
                 "accounts": "/api/v1/accounts/",
+                "me": "/api/v1/accounts/me/",
+                "register": "/api/v1/accounts/register/",
                 "posts": "/api/v1/posts/",
                 "comments": "/api/v1/posts/<id>/comments/",
                 "likes": "/api/v1/likes/",
