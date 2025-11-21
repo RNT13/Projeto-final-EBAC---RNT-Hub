@@ -206,21 +206,23 @@ dev = [
 ```python
 import os
 from pathlib import Path
-from django.core.management.utils import get_random_secret_key
+
 import dj_database_url
+from django.core.management.utils import get_random_secret_key
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv("SECRET_KEY", get_random_secret_key())
 DEBUG = os.getenv("DEBUG", "1") == "1"
 
-ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS",
-                          "127.0.0.1 localhost").split()
-CSRF_TRUSTED_ORIGINS = [
-    origin.strip() for origin in os.getenv("DJANGO_CSRF_TRUSTED_ORIGINS", "").split(",") if origin
-]
+ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
+CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in os.getenv("DJANGO_CSRF_TRUSTED_ORIGINS", "").split(",") if origin]
 
+AUTH_USER_MODEL = "accounts.User"
+
+# --------------------------------------------------------------------
 # Apps
+# --------------------------------------------------------------------
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -228,15 +230,21 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-
     # 3rd party
     "rest_framework",
-
-    # local
-    "api",
+    "rest_framework.authtoken",
+    # locais
+    "accounts",
+    "posts",
+    "comments",
+    "likes",
+    "follows",
+    "notifications",
 ]
 
-
+# --------------------------------------------------------------------
+# Middleware
+# --------------------------------------------------------------------
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -250,6 +258,9 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = "core.urls"
 
+# --------------------------------------------------------------------
+# Templates
+# --------------------------------------------------------------------
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
@@ -267,50 +278,42 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "core.wsgi.application"
 
+# --------------------------------------------------------------------
+# Database
+# --------------------------------------------------------------------
+DATABASES = {"default": dj_database_url.config(default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}", conn_max_age=600)}
 
-# Database via DATABASE_URL (works com SQLite em dev e Postgres em prod)
-DATABASES = {
-    "default": dj_database_url.config(
-        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
-        conn_max_age=600
-    )
-}
-
-
+# --------------------------------------------------------------------
+# Password validators
+# --------------------------------------------------------------------
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
-    },
+    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
-
+# --------------------------------------------------------------------
+# Internacionalização
+# --------------------------------------------------------------------
 LANGUAGE_CODE = "en-us"
-
 TIME_ZONE = "UTC"
-
 USE_I18N = True
-
 USE_TZ = True
 
-
-# Static
+# --------------------------------------------------------------------
+# Static files
+# --------------------------------------------------------------------
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-
-# Django REST Framework - paginação + configurações úteis
+# --------------------------------------------------------------------
+# Django REST Framework
+# --------------------------------------------------------------------
 REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 10,
+
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework.authentication.TokenAuthentication",
     ],
@@ -319,11 +322,19 @@ REST_FRAMEWORK = {
     ],
 }
 
+
+# Remove HTML Browsable API no Render (produção)
+if not DEBUG:
+    REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"] = [
+        "rest_framework.renderers.JSONRenderer",
+    ]
+
+# --------------------------------------------------------------------
 # Segurança
+# --------------------------------------------------------------------
 SECURE_SSL_REDIRECT = not DEBUG
 SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
-
 
 ```
 
@@ -337,15 +348,36 @@ CSRF_COOKIE_SECURE = not DEBUG
 from django.contrib import admin
 from django.http import JsonResponse
 from django.urls import include, path
-from rest_framework.routers import DefaultRouter
 from rest_framework.authtoken.views import obtain_auth_token
+from rest_framework.routers import DefaultRouter
 
-from api.views import BookViewSet
+from accounts.views import AccountViewSet, UserMeViewSet, UserRegisterViewSet
+from feed.views import FeedViewSet
+from follows.views import FollowViewSet
+from likes.views import LikeViewSet
+from notifications.views import NotificationViewSet
+from posts.views import PostViewSet
 
+
+# --------------------------------------------------------------------
+# Router principal
+# --------------------------------------------------------------------
 router = DefaultRouter()
-router.register(r"books", BookViewSet, basename="books")
+
+# Accounts
+router.register(r"accounts/me", UserMeViewSet, basename="me")
+router.register(r"accounts", AccountViewSet, basename="accounts")
+
+# Posts, Likes, Follows, Notifications
+router.register(r"posts", PostViewSet, basename="posts")
+router.register(r"likes", LikeViewSet, basename="likes")
+router.register(r"follows", FollowViewSet, basename="follows")
+router.register(r"notifications", NotificationViewSet, basename="notifications")
 
 
+# --------------------------------------------------------------------
+# API root (página inicial)
+# --------------------------------------------------------------------
 def api_root(request):
     return JsonResponse(
         {
@@ -353,17 +385,55 @@ def api_root(request):
             "message": "Bem-vindo(a) à API do projeto RNT-Hub",
             "version": "v1",
             "links": {
-                "books": "/api/v1/books/",
+                "admin": "/admin/",
+                "token": "/api/token/",
+                "register": "/api/v1/accounts/register/",
+                "accounts": "/api/v1/accounts/",
+                "me": "/api/v1/accounts/me/",
+                "posts": "/api/v1/posts/",
+                "likes": "/api/v1/likes/",
+                "follows": "/api/v1/follows/",
+                "notifications": "/api/v1/notifications/",
+                "feed_user": "/api/v1/feed/user/",
+                "feed_explore": "/api/v1/feed/explore/",
+                "feed_images": "/api/v1/feed/images/",
+                "feed_algorithm": "/api/v1/feed/algorithm/",
             },
         }
     )
 
 
+# Feed manual
+feed = FeedViewSet.as_view
+
+
+# --------------------------------------------------------------------
+# URL patterns
+# --------------------------------------------------------------------
 urlpatterns = [
     path("", api_root),
+
+    # Admin
     path("admin/", admin.site.urls),
+
+    # Auth token
     path("api/token/", obtain_auth_token, name="token"),
+
+    # Registro
+    path(
+        "api/v1/accounts/register/",
+        UserRegisterViewSet.as_view({"post": "create"}),
+        name="register",
+    ),
+
+    # Router automático do DRF (ViewSets)
     path("api/v1/", include(router.urls)),
+
+    # Feeds
+    path("api/v1/feed/user/", feed({"get": "user_feed"}), name="feed-user"),
+    path("api/v1/feed/explore/", feed({"get": "explore_feed"}), name="feed-explore"),
+    path("api/v1/feed/images/", feed({"get": "images_feed"}), name="feed-images"),
+    path("api/v1/feed/algorithm/", feed({"get": "algorithm_feed"}), name="feed-algorithm"),
 ]
 
 ```

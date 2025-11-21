@@ -11,10 +11,12 @@ from likes.views import LikeViewSet
 from notifications.views import NotificationViewSet
 from posts.views import PostViewSet
 
+# --------------------------------------------------------------------
+# Router principal
+# --------------------------------------------------------------------
 router = DefaultRouter()
 
 # Accounts
-router.register(r"accounts/register", UserRegisterViewSet, basename="register")
 router.register(r"accounts/me", UserMeViewSet, basename="me")
 router.register(r"accounts", AccountViewSet, basename="accounts")
 
@@ -25,6 +27,9 @@ router.register(r"follows", FollowViewSet, basename="follows")
 router.register(r"notifications", NotificationViewSet, basename="notifications")
 
 
+# --------------------------------------------------------------------
+# API root (página inicial)
+# --------------------------------------------------------------------
 def api_root(request):
     return JsonResponse(
         {
@@ -34,12 +39,10 @@ def api_root(request):
             "links": {
                 "admin": "/admin/",
                 "token": "/api/token/",
-                "books": "/api/v1/books/",
+                "register": "/api/v1/accounts/register/",
                 "accounts": "/api/v1/accounts/",
                 "me": "/api/v1/accounts/me/",
-                "register": "/api/v1/accounts/register/",
                 "posts": "/api/v1/posts/",
-                "comments": "/api/v1/posts/<id>/comments/",
                 "likes": "/api/v1/likes/",
                 "follows": "/api/v1/follows/",
                 "notifications": "/api/v1/notifications/",
@@ -52,12 +55,26 @@ def api_root(request):
     )
 
 
+# Feed manual
 feed = FeedViewSet.as_view
 
+
+# --------------------------------------------------------------------
+# URL patterns
+# --------------------------------------------------------------------
 urlpatterns = [
     path("", api_root),
+    # Admin
     path("admin/", admin.site.urls),
+    # Auth token
     path("api/token/", obtain_auth_token, name="token"),
+    # Registro
+    path(
+        "api/v1/accounts/register/",
+        UserRegisterViewSet.as_view({"post": "create"}),
+        name="register",
+    ),
+    # Router automático do DRF (ViewSets)
     path("api/v1/", include(router.urls)),
     # Feeds
     path("api/v1/feed/user/", feed({"get": "user_feed"}), name="feed-user"),
