@@ -2,6 +2,7 @@ from rest_framework import mixins, permissions, viewsets
 
 from .models import User
 from .serializers import UserRegisterSerializer, UserSerializer
+from rest_framework.permissions import AllowAny
 
 
 # -------------------------------------------------------------------
@@ -10,7 +11,7 @@ from .serializers import UserRegisterSerializer, UserSerializer
 class UserRegisterViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
     queryset = User.objects.all()
     serializer_class = UserRegisterSerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [AllowAny]
 
 
 # -------------------------------------------------------------------
