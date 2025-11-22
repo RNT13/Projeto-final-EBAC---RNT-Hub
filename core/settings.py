@@ -66,6 +66,8 @@ CORS_ALLOWED_ORIGINS = [
     # Lembre-se de adicionar o domínio de produção do seu frontend aqui no futuro
 ]
 
+CORS_ALLOW_CREDENTIALS = True
+
 
 # --------------------------------------------------------------------
 # Templates
