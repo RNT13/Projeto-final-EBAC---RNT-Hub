@@ -164,17 +164,34 @@ DRF_RENDERER_DEFAULT=JSON
 
 ```toml
 [project]
-name = "book-store"
+name = "rnt-hub"
 version = "0.1.0"
-description = "Book Store API"
-authors = [{name = "Renato Minoita", email = "email@exemplo.com"}]
+description = "Projeto final da EBAC"
+authors = [
+    {name = "RNT13",email = "renatornt13@gmail.com"}
+]
 readme = "README.md"
-requires-python = ">=3.11,<4.0"
+requires-python = ">=3.13,<4.0"
+dependencies = [
+    "django (>=5.2.8,<6.0.0)",
+    "djangorestframework (>=3.16.1,<4.0.0)",
+    "gunicorn (>=23.0.0,<24.0.0)",
+    "psycopg2-binary (>=2.9.11,<3.0.0)",
+    "dj-database-url (>=3.0.1,<4.0.0)",
+    "python-dotenv (>=1.2.1,<2.0.0)",
+    "whitenoise (>=6.11.0,<7.0.0)",
+    "pillow (>=12.0.0,<13.0.0)",
+    "django-cors-headers (>=4.9.0,<5.0.0)"
+]
+
+[tool.poetry]
+package-mode = false
 
 [build-system]
-requires = ["poetry-core>=1.5.0"]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
 
+# Configurações de ferramentas
 [tool.black]
 line-length = 120
 
@@ -194,9 +211,9 @@ dev = [
     "flake8 (>=7.3.0,<8.0.0)",
     "flake8-isort (>=7.0.0,<8.0.0)",
     "flake8-black (>=0.4.0,<0.5.0)",
-    "pytest",
-    "pytest-django"
+    "factory-boy (>=3.3.3,<4.0.0)"
 ]
+
 ```
 
 ---
@@ -1149,9 +1166,9 @@ git push -u origin main
 
 ## 🟪 Exportar requirements
 
-| Comando                                                                        | Descrição              |
-| ------------------------------------------------------------------------------ | ---------------------- |
-| `poetry export -f requirements.txt --output requirements.txt --without-hashes` | gerar requirements.txt |
+| Comando                                                                  | Descrição              |
+| ------------------------------------------------------------------------ | ---------------------- |
+| `poetry export -f requirements.txt -o requirements.txt --without-hashes` | gerar requirements.txt |
 
 ---
 
