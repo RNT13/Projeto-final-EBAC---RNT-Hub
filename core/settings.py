@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 from pathlib import Path
 
 import dj_database_url
@@ -26,7 +27,6 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     # 3rd party
     "rest_framework",
-    "rest_framework.authtoken",
     "rest_framework_simplejwt",
     "corsheaders",
     "drf_spectacular",
@@ -59,19 +59,16 @@ MIDDLEWARE = [
 ROOT_URLCONF = "core.urls"
 
 # ----------------------------------------------------------------------
-# CONFIGURAÇÃO CORS
+# CORS
 # ----------------------------------------------------------------------
-
-# Permite o acesso do seu frontend em desenvolvimento
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "https://rnt-hub.onrender.com",
-    # Lembre-se de adicionar o domínio de produção do seu frontend aqui no futuro
 ]
 
 CORS_ALLOW_CREDENTIALS = True
-
+CORS_ALLOW_ALL_HEADERS = True
 
 # --------------------------------------------------------------------
 # Templates
@@ -123,18 +120,29 @@ STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # --------------------------------------------------------------------
-# Django REST Framework
+# Django REST Framework + JWT
 # --------------------------------------------------------------------
 REST_FRAMEWORK = {
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 10,
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework.authentication.TokenAuthentication",
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
     ],
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
     ],
+}
+
+# --------------------------------------------------------------------
+# SIMPLE JWT
+# --------------------------------------------------------------------
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+    "ROTATE_REFRESH_TOKENS": False,
+    "BLACKLIST_AFTER_ROTATION": True,
+    "AUTH_HEADER_TYPES": ("Bearer",),
 }
 
 # --------------------------------------------------------------------
@@ -146,8 +154,7 @@ SPECTACULAR_SETTINGS = {
     "VERSION": "1.0.0",
 }
 
-
-# Remove HTML Browsable API no Render (produção)
+# Remover HTML Browsable API em produção
 if not DEBUG:
     REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"] = [
         "rest_framework.renderers.JSONRenderer",
