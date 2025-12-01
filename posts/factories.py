@@ -9,4 +9,4 @@ class PostFactory(factory.django.DjangoModelFactory):
         model = Post
 
     author = factory.SubFactory(UserFactory)
-    content = factory.Faker("text")
+    content = "Post de teste"

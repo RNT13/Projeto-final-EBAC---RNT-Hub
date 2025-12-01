@@ -3,6 +3,7 @@ from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import ListAPIView
+from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.response import Response
 
 from comments.serializers import CommentSerializer
@@ -14,9 +15,10 @@ User = get_user_model()
 
 
 class PostViewSet(viewsets.ModelViewSet):
-    queryset = Post.objects.all().order_by("-created_at")
+    queryset = Post.objects.all().select_related("author")
     serializer_class = PostSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    parser_classes = [MultiPartParser, FormParser]
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
@@ -29,14 +31,10 @@ class PostViewSet(viewsets.ModelViewSet):
             serializer = CommentSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
 
-            # Evita comentários duplicados
-            if post.comments_comments.filter(user=request.user, text=serializer.validated_data["text"]).exists():
-                raise ValidationError({"detail": "Você já comentou isso neste post."})
-
             serializer.save(user=request.user, post=post)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-        comments = post.comments_comments.all().order_by("created_at")
+        comments = post.comments.all().order_by("created_at")
         serializer = CommentSerializer(comments, many=True)
         return Response(serializer.data)
 

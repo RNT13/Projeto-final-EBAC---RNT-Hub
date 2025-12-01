@@ -1,7 +1,9 @@
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from .factories import CommentFactory, PostFactory, UserFactory
+from comments.factories import CommentFactory
+from posts.factories import PostFactory
+from users.factories import UserFactory
 
 
 class CommentAPITestCase(APITestCase):
@@ -13,7 +15,10 @@ class CommentAPITestCase(APITestCase):
 
     def test_create_comment(self):
         url = f"/api/v1/posts/{self.post.id}/comments/"
-        response = self.client.post(url, {"text": "Comentário teste"})
+        response = self.client.post(
+            url,
+            {"content": "Comentário de teste"},
+        )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data["user"], self.user.id)
 
