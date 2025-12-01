@@ -1,7 +1,7 @@
 import factory
 
-from accounts.factories import UserFactory
 from follows.models import Follow
+from users.factories import UserFactory
 
 
 class FollowFactory(factory.django.DjangoModelFactory):

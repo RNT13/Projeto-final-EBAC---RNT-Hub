@@ -240,7 +240,7 @@ CSRF_TRUSTED_ORIGINS = [
     if origin
 ]
 
-AUTH_USER_MODEL = "accounts.User"
+AUTH_USER_MODEL = "users.User"
 
 # --------------------------------------------------------------------
 # Apps

@@ -1,10 +1,12 @@
 from rest_framework import serializers
 
+from users.serializers.publicSerializer import UserPublicSerializer
+
 from .models import Comment, Post
 
 
 class PostSerializer(serializers.ModelSerializer):
-    author_username = serializers.CharField(source="author.username", read_only=True)
+    author = UserPublicSerializer(read_only=True)
     likes_count = serializers.IntegerField(source="likes.count", read_only=True)
     comments_count = serializers.IntegerField(source="comments.count", read_only=True)
 
@@ -13,16 +15,12 @@ class PostSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "author",
-            "author_username",
             "content",
             "image",
             "created_at",
-            "updated_at",
             "likes_count",
             "comments_count",
         ]
-        read_only_fields = ["id", "created_at", "updated_at", "likes_count", "comments_count"]
-        extra_kwargs = {"author": {"read_only": True}}
 
 
 class PostCommentSerializer(serializers.ModelSerializer):

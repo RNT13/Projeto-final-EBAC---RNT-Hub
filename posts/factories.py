@@ -1,7 +1,7 @@
 import factory
 
-from accounts.factories import UserFactory
 from posts.models import Post
+from users.factories import UserFactory
 
 
 class PostFactory(factory.django.DjangoModelFactory):

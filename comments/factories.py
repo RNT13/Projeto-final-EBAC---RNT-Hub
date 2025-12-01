@@ -1,8 +1,8 @@
 import factory
 
-from accounts.factories import UserFactory
 from comments.models import Comment
 from posts.factories import PostFactory
+from users.factories import UserFactory
 
 
 class CommentFactory(factory.django.DjangoModelFactory):

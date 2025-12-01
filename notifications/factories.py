@@ -1,7 +1,7 @@
 import factory
 
-from accounts.factories import UserFactory
 from notifications.models import Notification
+from users.factories import UserFactory
 
 
 class NotificationFactory(factory.django.DjangoModelFactory):
