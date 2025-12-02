@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.db.models import Count
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
@@ -14,7 +15,11 @@ User = get_user_model()
 
 
 class PostViewSet(viewsets.ModelViewSet):
-    queryset = Post.objects.all().select_related("author")
+    queryset = (
+        Post.objects.all()
+        .select_related("author")
+        .annotate(likes_count=Count("likes", distinct=True), comments_count=Count("comments", distinct=True))
+    )
     serializer_class = PostSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
@@ -53,4 +58,8 @@ class UserPostsView(ListAPIView):
         except User.DoesNotExist:
             raise ValidationError({"detail": "Usuário não encontrado."})
 
-        return Post.objects.filter(author=user).order_by("-created_at")
+        return (
+            Post.objects.filter(author=user)
+            .annotate(likes_count=Count("likes", distinct=True), comments_count=Count("comments", distinct=True))
+            .order_by("-created_at")
+        )
