@@ -30,7 +30,6 @@ class PostViewSet(viewsets.ModelViewSet):
         if request.method == "POST":
             serializer = CommentSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
-
             serializer.save(user=request.user, post=post)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
@@ -44,11 +43,10 @@ class UserPostsView(ListAPIView):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
     def get_queryset(self):
-        user_id = self.kwargs["user_id"]
+        username = self.kwargs["username"]
 
-        # se o usuário não existir → erro 404
         try:
-            user = User.objects.get(id=user_id)
+            user = User.objects.get(username=username)
         except User.DoesNotExist:
             raise ValidationError({"detail": "Usuário não encontrado."})
 

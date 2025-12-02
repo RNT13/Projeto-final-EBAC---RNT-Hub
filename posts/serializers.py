@@ -29,3 +29,9 @@ class PostSerializer(serializers.ModelSerializer):
             "likes_count",
             "comments_count",
         ]
+
+    def get_image(self, obj):
+        request = self.context.get("request")
+        if obj.image and request:
+            return request.build_absolute_uri(obj.image.url)
+        return None
