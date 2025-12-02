@@ -7,7 +7,8 @@ from .models import Post
 
 class PostSerializer(serializers.ModelSerializer):
     author = UserPublicSerializer(read_only=True)
-    image = serializers.ImageField(required=False, allow_null=True)
+    image = serializers.URLField(required=False, allow_null=True)
+
     likes_count = serializers.IntegerField(source="likes.count", read_only=True)
     comments_count = serializers.IntegerField(source="comments.count", read_only=True)
 
@@ -29,14 +30,3 @@ class PostSerializer(serializers.ModelSerializer):
             "likes_count",
             "comments_count",
         ]
-
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        request = self.context.get("request")
-
-        if instance.image and request:
-            data["image"] = request.build_absolute_uri(instance.image.url)
-        else:
-            data["image"] = None
-
-        return data

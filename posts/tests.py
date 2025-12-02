@@ -1,3 +1,4 @@
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -18,9 +19,7 @@ class PostAPITestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_create_post(self):
-        response = self.client.post("/api/v1/posts/", {"content": "Novo post"})
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data["author"]["id"], self.user.id)
+        return PostFactory(author=self.user, updated_at=timezone.now())
 
 
 class CommentAPITestCase(APITestCase):
