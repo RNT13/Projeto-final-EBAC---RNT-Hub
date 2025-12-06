@@ -25,8 +25,11 @@ class UserSerializer(serializers.ModelSerializer):
             "location",
             "is_verified",
             "date_joined",
+            "followers_count",
+            "following_count",
         ]
-        read_only_fields = ["id", "email", "is_verified", "date_joined", "user_tag"]
+        read_only_fields = ["id", "email", "is_verified", "date_joined",
+                            "user_tag", "followers_count", "following_count",]
 
     def get_followers_count(self, obj):
         return Follow.objects.filter(following=obj).count()
