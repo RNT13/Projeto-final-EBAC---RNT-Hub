@@ -5,6 +5,7 @@ from rest_framework.response import Response
 
 from users.models import User
 from users.serializers.userSerializer import UserSerializer
+from users.serializers.userUpdateSerializer import UserUpdateSerializer
 
 
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
@@ -12,15 +13,18 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-    # ✅ /api/v1/users/me/
     @action(detail=False, methods=["get", "patch"], url_path="me")
     def me(self, request):
         user = request.user
 
+        # ✅ GET -> dados completos (perfil)
         if request.method == "GET":
             return Response(UserSerializer(user).data)
 
-        serializer = UserSerializer(user, data=request.data, partial=True)
+        # ✅ PATCH -> somente campos editáveis
+        serializer = UserUpdateSerializer(user, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response(serializer.data)
+
+        # ✅ retorna perfil atualizado completo
+        return Response(UserSerializer(user).data)

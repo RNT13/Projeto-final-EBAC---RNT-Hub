@@ -15,6 +15,7 @@ class UserSerializer(serializers.ModelSerializer):
             "user_tag",
             "bio",
             "avatar",
+            "user_bg",
             "website",
             "location",
             "is_verified",

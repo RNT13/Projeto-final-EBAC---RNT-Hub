@@ -19,7 +19,8 @@ class User(AbstractUser):
     user_tag = models.CharField(max_length=30, unique=True, blank=True)
 
     bio = models.TextField(blank=True)
-    avatar = models.ImageField(upload_to=user_avatar_path, blank=True, null=True)
+    avatar = models.URLField(blank=True, null=True)
+    user_bg = models.URLField(blank=True, null=True)
     website = models.URLField(blank=True)
     location = models.CharField(max_length=100, blank=True)
 
