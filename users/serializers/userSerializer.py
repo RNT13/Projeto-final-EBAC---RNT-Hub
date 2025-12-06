@@ -11,6 +11,8 @@ class UserSerializer(serializers.ModelSerializer):
             "id",
             "email",
             "username",
+            "role",
+            "user_tag",
             "bio",
             "avatar",
             "website",
@@ -18,4 +20,4 @@ class UserSerializer(serializers.ModelSerializer):
             "is_verified",
             "date_joined",
         ]
-        read_only_fields = ["id", "email", "is_verified", "date_joined"]
+        read_only_fields = ["id", "email", "is_verified", "date_joined", "user_tag"]
