@@ -28,11 +28,24 @@ class UserSerializer(serializers.ModelSerializer):
             "followers_count",
             "following_count",
         ]
-        read_only_fields = ["id", "email", "is_verified", "date_joined",
-                            "user_tag", "followers_count", "following_count",]
+        read_only_fields = [
+            "id",
+            "email",
+            "is_verified",
+            "date_joined",
+            "user_tag",
+            "followers_count",
+            "following_count",
+        ]
 
     def get_followers_count(self, obj):
         return Follow.objects.filter(following=obj).count()
 
     def get_following_count(self, obj):
         return Follow.objects.filter(follower=obj).count()
+
+
+def validate_username(self, value):
+    if User.objects.exclude(pk=self.instance.pk).filter(username=value).exists():
+        raise serializers.ValidationError("Esse username já está em uso.")
+    return value

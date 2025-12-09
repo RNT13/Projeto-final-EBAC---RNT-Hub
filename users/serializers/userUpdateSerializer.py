@@ -4,10 +4,12 @@ from users.models import User
 
 
 class UserUpdateSerializer(serializers.ModelSerializer):
-    def validate_user_bg(self, value):
-        if value and "cloudinary.com" not in value:
-            raise serializers.ValidationError("Imagem inválida")
-        return value
+
+    def to_internal_value(self, data):
+        for field in ["avatar", "user_bg", "website"]:
+            if data.get(field) == "":
+                data[field] = None
+        return super().to_internal_value(data)
 
     class Meta:
         model = User
