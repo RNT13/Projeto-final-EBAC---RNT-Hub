@@ -10,6 +10,7 @@ class UserPublicSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "username",
+            "user_tag",
             "avatar",
             "is_verified",
         ]
