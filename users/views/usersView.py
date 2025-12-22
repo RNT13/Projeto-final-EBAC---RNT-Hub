@@ -19,7 +19,7 @@ class UserViewSet(viewsets.ModelViewSet):
     lookup_field = "username"
     lookup_url_kwarg = "username"
 
-    http_method_names = ["get", "patch", "head", "options"]
+    http_method_names = ["get", "patch", "post", "delete", "head", "options"]
 
     @action(detail=False, methods=["get", "patch"], url_path="me")
     def me(self, request):
