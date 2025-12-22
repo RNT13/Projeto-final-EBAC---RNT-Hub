@@ -19,7 +19,7 @@ class User(AbstractUser):
             RegexValidator(
                 regex=r"^[a-zA-Z0-9._-]+$", message='Username pode conter apenas letras, números, ".", "_" e "-".'
             )
-        ]
+        ],
     )
 
     ROLE_CHOICES = (
