@@ -30,6 +30,7 @@ class UserSerializer(serializers.ModelSerializer):
             "date_joined",
             "followers_count",
             "following_count",
+            "posts_count",
             "is_following",
         ]
         read_only_fields = [
