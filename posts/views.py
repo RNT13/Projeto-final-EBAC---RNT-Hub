@@ -1,4 +1,3 @@
-from django.contrib.auth import get_user_model
 from django.db.models import Count
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
@@ -7,11 +6,10 @@ from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
 
 from comments.serializers.commentSerializer import CommentSerializer
+from users.models import User
 
 from .models import Post
 from .serializers import PostSerializer
-
-User = get_user_model()
 
 
 class PostViewSet(viewsets.ModelViewSet):
