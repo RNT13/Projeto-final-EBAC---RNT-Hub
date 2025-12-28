@@ -7,7 +7,7 @@ from .models import Post
 
 class PostSerializer(serializers.ModelSerializer):
     author = UserPublicSerializer(read_only=True)
-    image = serializers.URLField(required=False, allow_null=True)
+    image = serializers.URLField(required=False, allow_null=True, allow_blank=True)
     is_liked = serializers.SerializerMethodField()
     likes_count = serializers.SerializerMethodField()
     comments_count = serializers.SerializerMethodField()
@@ -52,9 +52,6 @@ class PostSerializer(serializers.ModelSerializer):
 
         if image == "":
             data["image"] = None
-
-        if not content and not image:
-            raise serializers.ValidationError("O post precisa ter texto ou imagem.")
 
         if not content and not image:
             raise serializers.ValidationError("O post precisa ter texto ou imagem.")
