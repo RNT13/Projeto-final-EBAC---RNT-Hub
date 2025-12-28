@@ -8,6 +8,7 @@ from .models import Post
 class PostSerializer(serializers.ModelSerializer):
     author = UserPublicSerializer(read_only=True)
     image = serializers.URLField(required=False, allow_null=True, allow_blank=True)
+    content = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     is_liked = serializers.SerializerMethodField()
     likes_count = serializers.SerializerMethodField()
     comments_count = serializers.SerializerMethodField()
