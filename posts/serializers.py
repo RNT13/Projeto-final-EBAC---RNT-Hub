@@ -39,7 +39,18 @@ class PostSerializer(serializers.ModelSerializer):
         return obj.comments.count()
 
     def get_is_liked(self, obj):
-        user = self.context.get("request").user
-        if user.is_authenticated:
-            return obj.likes.filter(user=user).exists()
-        return False
+        request = self.context.get("request")
+
+        if not request or request.user.is_anonymous:
+            return False
+
+        return obj.likes.filter(user=request.user).exists()
+
+    def validate(self, data):
+        content = data.get("content")
+        image = data.get("image")
+
+        if not content and not image:
+            raise serializers.ValidationError("O post precisa ter texto ou imagem.")
+
+        return data
