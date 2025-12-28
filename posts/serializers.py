@@ -50,6 +50,12 @@ class PostSerializer(serializers.ModelSerializer):
         content = data.get("content")
         image = data.get("image")
 
+        if image == "":
+            data["image"] = None
+
+        if not content and not image:
+            raise serializers.ValidationError("O post precisa ter texto ou imagem.")
+
         if not content and not image:
             raise serializers.ValidationError("O post precisa ter texto ou imagem.")
 
