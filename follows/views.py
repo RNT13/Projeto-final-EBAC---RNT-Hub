@@ -2,9 +2,10 @@ from django.shortcuts import get_object_or_404
 from rest_framework import generics, permissions, viewsets
 from rest_framework.exceptions import ValidationError
 
+from users.models import User
+
 from .models import Follow
 from .serializers import FollowSerializer
-from users.models import User
 
 
 class FollowViewSet(viewsets.ModelViewSet):
@@ -20,11 +21,7 @@ class FollowViewSet(viewsets.ModelViewSet):
     http_method_names = ["get", "post", "delete"]
 
     def get_queryset(self):
-        return (
-            Follow.objects
-            .filter(follower=self.request.user)
-            .select_related("following")
-        )
+        return Follow.objects.filter(follower=self.request.user).select_related("following")
 
     def perform_create(self, serializer):
         follower = self.request.user
@@ -33,10 +30,7 @@ class FollowViewSet(viewsets.ModelViewSet):
         if follower == following:
             raise ValidationError({"detail": "Você não pode seguir a si mesmo."})
 
-        if Follow.objects.filter(
-            follower=follower,
-            following=following
-        ).exists():
+        if Follow.objects.filter(follower=follower, following=following).exists():
             raise ValidationError({"detail": "Você já segue esse usuário."})
 
         serializer.save(follower=follower)
@@ -53,11 +47,7 @@ class FollowersListView(generics.ListAPIView):
     def get_queryset(self):
         user = get_object_or_404(User, id=self.kwargs["user_id"])
 
-        return (
-            Follow.objects
-            .filter(following=user)
-            .select_related("follower")
-        )
+        return Follow.objects.filter(following=user).select_related("follower")
 
 
 class FollowingListView(generics.ListAPIView):
@@ -71,8 +61,4 @@ class FollowingListView(generics.ListAPIView):
     def get_queryset(self):
         user = get_object_or_404(User, id=self.kwargs["user_id"])
 
-        return (
-            Follow.objects
-            .filter(follower=user)
-            .select_related("following")
-        )
+        return Follow.objects.filter(follower=user).select_related("following")
