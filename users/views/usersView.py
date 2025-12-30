@@ -1,3 +1,4 @@
+from django.db.models import Count, Exists, OuterRef
 from django.shortcuts import get_object_or_404
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
@@ -12,7 +13,6 @@ from users.serializers.userUpdateSerializer import UserUpdateSerializer
 
 
 class UserViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
     filter_backends = [filters.SearchFilter]
@@ -23,9 +23,36 @@ class UserViewSet(viewsets.ModelViewSet):
 
     http_method_names = ["get", "patch", "post", "delete", "head", "options"]
 
+    def get_queryset(self):
+        user = self.request.user
+
+        queryset = User.objects.all().annotate(
+            followers_count=Count("followers", distinct=True),
+            following_count=Count("following", distinct=True),
+        )
+
+        # 👇 Otimiza is_following / is_follower
+        if user.is_authenticated:
+            queryset = queryset.annotate(
+                is_following=Exists(
+                    Follow.objects.filter(
+                        follower=user,
+                        following=OuterRef("pk"),
+                    )
+                ),
+                is_follower=Exists(
+                    Follow.objects.filter(
+                        follower=OuterRef("pk"),
+                        following=user,
+                    )
+                ),
+            )
+
+        return queryset
+
     @action(detail=False, methods=["get", "patch"], url_path="me")
     def me(self, request):
-        user = request.user
+        user = self.get_queryset().get(pk=request.user.pk)
 
         if request.method == "PATCH":
             serializer = UserUpdateSerializer(user, data=request.data, partial=True)

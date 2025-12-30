@@ -17,7 +17,7 @@ class CommentAPITestCase(APITestCase):
         url = f"/api/v1/posts/{self.post.id}/comments/"
         response = self.client.post(
             url,
-            {"content": "Comentário de teste"},
+            {"content": "Comentário de teste"}, format="json",
         )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         user_data = response.data["user"]

@@ -7,10 +7,11 @@ User = get_user_model()
 
 
 class UserSerializer(serializers.ModelSerializer):
-    followers_count = serializers.SerializerMethodField(read_only=True)
-    following_count = serializers.SerializerMethodField(read_only=True)
+    followers_count = serializers.IntegerField(read_only=True)
+    following_count = serializers.IntegerField(read_only=True)
+    is_following = serializers.BooleanField(read_only=True)
+    is_follower = serializers.BooleanField(read_only=True)
     posts_count = serializers.IntegerField(read_only=True)
-    is_following = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = User
@@ -32,6 +33,7 @@ class UserSerializer(serializers.ModelSerializer):
             "following_count",
             "posts_count",
             "is_following",
+            "is_follower",
         ]
         read_only_fields = [
             "id",
@@ -57,12 +59,19 @@ class UserSerializer(serializers.ModelSerializer):
 
         return Follow.objects.filter(follower=request.user, following=obj).exists()
 
+    def get_is_follower(self, obj) -> bool:
+        request = self.context.get("request")
 
-def validate_username(self, value):
-    if User.objects.exclude(pk=self.instance.pk).filter(username=value).exists():
-        raise serializers.ValidationError("Esse username já está em uso.")
+        if not request or request.user.is_anonymous:
+            return False
 
-    if not value[0].isupper():
-        raise serializers.ValidationError("O username deve começar com letra maiúscula.")
+        return Follow.objects.filter(follower=obj, following=request.user).exists()
 
-    return value
+    def validate_username(self, value):
+        if User.objects.exclude(pk=self.instance.pk).filter(username=value).exists():
+            raise serializers.ValidationError("Esse username já está em uso.")
+
+        if not value[0].isupper():
+            raise serializers.ValidationError("O username deve começar com letra maiúscula.")
+
+        return value

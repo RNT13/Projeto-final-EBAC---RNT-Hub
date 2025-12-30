@@ -1269,6 +1269,12 @@ git push -u origin main
 
 ---
 
+# 🚀 10. Comando Openapi
+
+| Comando                                                                                            | Descrição                          |
+| -------------------------------------------------------------------------------------------------- | ---------------------------------- |
+| `npx openapi-typescript https://"nome do domínio da API"/schema/ --output src/types/api/schema.ts` | gera typescript do API no frontend |
+
 # 👤 Autor
 
 Feito com 💙 por [Renato Minoita](https://www.linkedin.com/in/renato-minoita/)
