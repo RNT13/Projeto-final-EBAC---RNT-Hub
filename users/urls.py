@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
 from users.views.me_views import MeView
@@ -13,6 +13,7 @@ router.register("popular-users", PopularUsersViewSet, basename="popular-users")
 urlpatterns = [
     path("me/", MeView.as_view(), name="users-me"),
     path("register/", UserRegisterViewSet.as_view({"post": "create"})),
+    path("", include(router.urls)),
 ]
 
 urlpatterns += router.urls
