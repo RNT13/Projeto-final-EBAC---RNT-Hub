@@ -18,6 +18,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
     lookup_field = "username"
     lookup_url_kwarg = "username"
+    lookup_value_regex = r"[\w.@+-]+"
 
     def get_queryset(self):
         user = self.request.user
