@@ -66,11 +66,8 @@ class FeedViewSet(viewsets.ViewSet):
 
     @action(detail=False, methods=["get"])
     def algorithm_feed(self, request):
-        following_ids = Follow.objects.filter(follower=request.user).values_list("following_id", flat=True)
-
         queryset = (
             self.base_queryset()
-            .filter(author__in=list(following_ids) + [request.user.id])
             .annotate(score=F("likes_count") * 2 + F("comments_count"))
             .filter(score__gt=0)
             .order_by("-score", "-created_at")
