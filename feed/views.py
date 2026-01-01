@@ -11,13 +11,14 @@ from posts.serializers import PostSerializer
 # CursorPagination para feed infinito
 class FeedCursorPagination(CursorPagination):
     page_size = 10
-    ordering = "-created_at"  # ordena do mais recente para o mais antigo
+    ordering = "-created_at"
 
 
 class FeedViewSet(viewsets.ViewSet):
     serializer_class = PostSerializer
     permission_classes = [permissions.IsAuthenticated]
     pagination_class = FeedCursorPagination
+
     """
     FeedViewSet com diferentes tipos de feed:
       1. feed do usuário (quem sigo + meus posts)
@@ -26,39 +27,57 @@ class FeedViewSet(viewsets.ViewSet):
       4. feed por algoritmo (score baseado em likes + comentários)
     """
 
-    permission_classes = [permissions.IsAuthenticated]
-    pagination_class = FeedCursorPagination
+    # 🔥 BASE QUERYSET COM ANNOTATE (ESSENCIAL)
+    def base_queryset(self):
+        return Post.objects.select_related("author").annotate(
+            likes_count=Count("likes", distinct=True),
+            comments_count=Count("comments", distinct=True),
+        )
 
     @action(detail=False, methods=["get"])
     def user_feed(self, request):
         following_ids = Follow.objects.filter(follower=request.user).values_list("following_id", flat=True)
-        queryset = Post.objects.filter(author__in=list(following_ids) + [request.user.id]).order_by("-created_at")
+
+        queryset = (
+            self.base_queryset().filter(author__in=list(following_ids) + [request.user.id]).order_by("-created_at")
+        )
+
         return self.paginate_and_serialize(request, queryset)
 
     @action(detail=False, methods=["get"])
     def explore_feed(self, request):
-        queryset = Post.objects.all().order_by("-created_at")
+        queryset = self.base_queryset().order_by("-created_at")
         return self.paginate_and_serialize(request, queryset)
 
     @action(detail=False, methods=["get"])
     def images_feed(self, request):
         following_ids = Follow.objects.filter(follower=request.user).values_list("following_id", flat=True)
-        queryset = Post.objects.filter(
-            author__in=list(following_ids) + [request.user.id], image__isnull=False
-        ).order_by("-created_at")
+
+        queryset = (
+            self.base_queryset()
+            .filter(
+                author__in=list(following_ids) + [request.user.id],
+                image__isnull=False,
+            )
+            .order_by("-created_at")
+        )
+
         return self.paginate_and_serialize(request, queryset)
 
     @action(detail=False, methods=["get"])
     def algorithm_feed(self, request):
         following_ids = Follow.objects.filter(follower=request.user).values_list("following_id", flat=True)
+
         queryset = (
-            Post.objects.filter(author__in=list(following_ids) + [request.user.id])
-            .annotate(score=F("likes__count") * 2 + Count("comments"))
+            self.base_queryset()
+            .filter(author__in=list(following_ids) + [request.user.id])
+            .annotate(score=F("likes_count") * 2 + F("comments_count"))
             .order_by("-score", "-created_at")
         )
+
         return self.paginate_and_serialize(request, queryset)
 
-    # Função helper para paginar e serializar
+    # 🔁 Helper para paginação + serializer
     def paginate_and_serialize(self, request, queryset):
         paginator = self.pagination_class()
         page = paginator.paginate_queryset(queryset, request)
