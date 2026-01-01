@@ -7,7 +7,7 @@ from users.views.user_register_view_set import UserRegisterViewSet
 from users.views.user_view_set import UserViewSet
 
 router = DefaultRouter()
-router.register("users", UserViewSet, basename="users")
+router.register("", UserViewSet, basename="users")
 router.register("popular-users", PopularUsersViewSet, basename="popular-users")
 
 urlpatterns = [
