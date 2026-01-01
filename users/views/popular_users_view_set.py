@@ -4,11 +4,11 @@ from rest_framework.viewsets import ReadOnlyModelViewSet
 
 from posts.models import Post
 from users.models import User
-from users.serializers.user_serializer import UserSerializer
+from users.serializers.public_serializer import UserPublicSerializer
 
 
 class PopularUsersViewSet(ReadOnlyModelViewSet):
-    serializer_class = UserSerializer
+    serializer_class = UserPublicSerializer
 
     def get_queryset(self):
         posts_count = Post.objects.filter(author=OuterRef("pk")).values("author").annotate(c=Count("id")).values("c")
