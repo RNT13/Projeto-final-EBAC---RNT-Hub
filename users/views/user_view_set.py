@@ -8,7 +8,6 @@ from follows.models import Follow
 from users.models import User
 from users.serializers.change_password_serializer import ChangePasswordSerializer
 from users.serializers.user_serializer import UserSerializer
-from users.serializers.user_update_serializer import UserUpdateSerializer
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -45,17 +44,6 @@ class UserViewSet(viewsets.ModelViewSet):
             )
 
         return queryset
-
-    @action(detail=False, methods=["get", "patch"], url_path="me")
-    def me(self, request):
-        user = self.get_queryset().get(pk=request.user.pk)
-
-        if request.method == "PATCH":
-            serializer = UserUpdateSerializer(user, data=request.data, partial=True)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-
-        return Response(UserSerializer(user, context={"request": request}).data)
 
     @action(
         detail=False,
